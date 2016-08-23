@@ -93,7 +93,7 @@
 #pragma mark - start load web
 
 - (void)startLoad {
-    NSString *urlString = @"http://www.jianshu.com";
+    NSString *urlString = @"http://www.baidu.com";
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:urlString]];
     request.timeoutInterval = 15.0f;
     [self.wkWebView loadRequest:request];
@@ -109,7 +109,18 @@
     if ([keyPath isEqualToString:@"estimatedProgress"]) {
         self.progressView.progress = self.wkWebView.estimatedProgress;
         if (self.progressView.progress == 1) {
-            self.progressView.hidden = YES;
+            /*
+             *添加一个简单的动画，将progressView的Height变为1.4倍
+             *动画时长0.25s，延时0.3s后开始动画
+             *动画结束后将progressView隐藏
+             */
+            __weak typeof (self)weakSelf = self;
+            [UIView animateWithDuration:0.25f delay:0.3f options:UIViewAnimationOptionCurveEaseOut animations:^{
+                weakSelf.progressView.transform = CGAffineTransformMakeScale(1.0f, 1.4f);
+            } completion:^(BOOL finished) {
+                weakSelf.progressView.hidden = YES;
+
+            }];
         }
     }else{
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
@@ -127,6 +138,8 @@
     NSLog(@"开始加载网页");
     //开始加载网页时展示出progressView
     self.progressView.hidden = NO;
+    //开始加载网页的时候将progressView的Height恢复为1.5倍
+    self.progressView.transform = CGAffineTransformMakeScale(1.0f, 1.5f);
     //防止progressView被网页挡住
     [self.view bringSubviewToFront:self.progressView];
 }
@@ -135,7 +148,7 @@
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     NSLog(@"加载完成");
     //加载完成后隐藏progressView
-    self.progressView.hidden = YES;
+//    self.progressView.hidden = YES;
 }
 
 //加载失败
