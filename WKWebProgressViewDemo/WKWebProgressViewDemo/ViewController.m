@@ -12,10 +12,11 @@
 #define kScreenWidth [UIScreen mainScreen].bounds.size.width
 #define kScreenHeight [UIScreen mainScreen].bounds.size.height
 
-@interface ViewController ()<WKUIDelegate,WKNavigationDelegate>
+@interface ViewController ()<WKUIDelegate,WKNavigationDelegate,UITextFieldDelegate>
 
 @property (nonatomic, strong) WKWebView *wkWebView;
-
+@property (nonatomic, strong) WKWebViewConfiguration *wkConfig;
+@property (nonatomic, strong) UITextField *textField;
 /*
  *1.添加UIProgressView属性
  */
@@ -27,14 +28,37 @@
 
 #pragma mark - 初始化wkWebView
 
+- (WKWebViewConfiguration *)wkConfig {
+    if (!_wkConfig) {
+        _wkConfig = [[WKWebViewConfiguration alloc] init];
+        _wkConfig.allowsInlineMediaPlayback = YES;
+        _wkConfig.allowsPictureInPictureMediaPlayback = YES;
+    }
+    return _wkConfig;
+}
+
 - (WKWebView *)wkWebView {
     if (!_wkWebView) {
-        _wkWebView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 64, kScreenWidth, kScreenHeight - 64 - 40)];
+        _wkWebView = [[WKWebView alloc] initWithFrame:CGRectMake(0, 64, kScreenWidth, kScreenHeight - 64 - 40) configuration:self.wkConfig];
         _wkWebView.navigationDelegate = self;
         _wkWebView.UIDelegate = self;
         [self.view addSubview:_wkWebView];
     }
     return _wkWebView;
+}
+
+- (UITextField *)textField {
+    if (!_textField) {
+        //添加地址栏
+        _textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 20, kScreenWidth, 44)];
+        _textField.keyboardType = UIKeyboardTypeURL;
+        _textField.borderStyle = UITextBorderStyleRoundedRect;
+        _textField.returnKeyType = UIReturnKeyDone;
+        _textField.adjustsFontSizeToFitWidth = YES;
+        _textField.delegate = self;
+        [self.view addSubview:_textField];
+    }
+    return _textField;
 }
 
 /*
@@ -47,12 +71,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 20, kScreenWidth, 44)];
-    titleLabel.backgroundColor = [UIColor lightGrayColor];
-    titleLabel.text = @"WKWebView添加进度条";
-    titleLabel.textAlignment = NSTextAlignmentCenter;
-    [self.view addSubview:titleLabel];
     
     [self setupToolView];
     
@@ -142,6 +160,7 @@
     self.progressView.transform = CGAffineTransformMakeScale(1.0f, 1.5f);
     //防止progressView被网页挡住
     [self.view bringSubviewToFront:self.progressView];
+    self.textField.text = [NSString stringWithFormat:@"%@",webView.URL];
 }
 
 //加载完成
@@ -182,6 +201,31 @@
 
 - (void)refreshAction {
     [self.wkWebView reload];
+}
+
+#pragma mark - UITextField Delegate methods
+
+//开始编辑是时将所有文字选中
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+    [self.textField performSelector:@selector(selectAll:) withObject:nil];
+}
+
+//点击完成时加载网页
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    if (textField.text.length) {
+        NSString *urlString;
+        if ([textField.text containsString:@"http://"] ||
+            [textField.text containsString:@"https://"]) {
+            urlString = [NSString stringWithFormat:@"%@",textField.text];
+        }else {
+            urlString = [NSString stringWithFormat:@"http://%@",textField.text];
+        }
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:urlString]];
+        request.timeoutInterval = 15.0f;
+        [self.wkWebView loadRequest:request];
+    }
+    [self.textField resignFirstResponder];
+    return YES;
 }
 
 @end
