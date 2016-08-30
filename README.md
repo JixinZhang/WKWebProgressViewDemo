@@ -6,4 +6,4 @@ iOS WKWebView添加网页加载进度条
 
 - 详细讲解可前往<a href="http://www.jianshu.com/p/d3c8ba672760">这篇文章</a>
 
-![progressView.png](https://github.com/JixinZhang/WKWebProgressViewDemo/blob/master/WKWebProgressViewDemo.png)
+![progressView.png](https://github.com/JixinZhang/WKWebProgressViewDemo/blob/master/WKWebProgressViewDemo.gif)
